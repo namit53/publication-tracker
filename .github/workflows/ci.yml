@@ -23,3 +23,15 @@ jobs:
 
       - name: Run tests
         run: ./mvnw -B test
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t publication-tracker .
+
+        
