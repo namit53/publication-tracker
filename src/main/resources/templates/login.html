@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin login | UPES Research</title>
+  <link rel="stylesheet" th:href="@{/css/site.css}">
+</head>
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+<main class="page-shell"><section class="form-card">
+  <h1>Admin login</h1>
+  <p class="notice error" role="alert" th:if="${param.error != null}">Incorrect username or password.</p>
+  <form class="form-grid" method="post" th:action="@{/login}">
+    <label class="form-field form-field-full">Username
+      <input class="input" name="username" autocomplete="username" required>
+    </label>
+    <label class="form-field form-field-full">Password
+      <input class="input" name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <div class="form-actions"><button class="button" type="submit">Log in</button></div>
+  </form>
+</section></main>
+<footer th:replace="~{fragments :: siteFooter}"></footer>
+</body></html>

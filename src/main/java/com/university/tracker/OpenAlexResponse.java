@@ -15,7 +15,13 @@ record OpenAlexWork(
         @JsonProperty("publication_year") Integer publicationYear,
         String doi,
         @JsonProperty("primary_location") OpenAlexLocation primaryLocation,
-        @JsonProperty("cited_by_count") Integer citedByCount) {
+        @JsonProperty("cited_by_count") Integer citedByCount,
+        @JsonProperty("primary_topic") OpenAlexPrimaryTopic primaryTopic) {
+
+    OpenAlexWork(String title, List<OpenAlexAuthorship> authorships, Integer publicationYear,
+                 String doi, OpenAlexLocation primaryLocation, Integer citedByCount) {
+        this(title, authorships, publicationYear, doi, primaryLocation, citedByCount, null);
+    }
 
     int publicationYearOrZero() {
         return publicationYear == null ? 0 : publicationYear;
@@ -44,6 +50,13 @@ record OpenAlexWork(
         String displayName = primaryLocation.source().displayName();
         return displayName == null ? "" : displayName;
     }
+
+    String primaryFieldName() {
+        if (primaryTopic == null || primaryTopic.field() == null) {
+            return null;
+        }
+        return primaryTopic.field().displayName();
+    }
 }
 
 record OpenAlexAuthorship(OpenAlexAuthor author) {
@@ -56,4 +69,10 @@ record OpenAlexLocation(OpenAlexSource source) {
 }
 
 record OpenAlexSource(@JsonProperty("display_name") String displayName) {
+}
+
+record OpenAlexPrimaryTopic(OpenAlexTopicField field) {
+}
+
+record OpenAlexTopicField(@JsonProperty("display_name") String displayName) {
 }

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title th:text="${editId != null ? 'Edit publication | UPES Research' : 'Add publication | UPES Research'}">Add publication | UPES Research</title><link rel="stylesheet" th:href="@{/css/site.css}"></head>
+<body><div th:replace="~{fragments :: siteHeader}"></div>
+<main class="page-shell"><section class="form-card"><a class="back-link" href="/publications">&larr; Back to publications</a><h1 th:text="${editId != null ? 'Edit publication' : 'Add publication'}">Add publication</h1><p class="lede" th:if="${editId == null}">Add a publication to the UPES research record.</p>
+  <form class="form-grid" method="post" th:action="${editId == null} ? @{/publications/new} : @{/publications/{id}/edit(id=${editId})}" th:object="${publicationForm}">
+    <div class="form-error" th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}">This publication could not be saved.</div>
+    <div class="form-field form-field-full"><label for="title">Title <span>*</span></label><input class="input" id="title" type="text" th:field="*{title}" required autofocus><div class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Title is required.</div></div>
+    <div class="form-field form-field-full"><label for="authors">Authors <span>*</span></label><input class="input" id="authors" type="text" th:field="*{authors}" required><div class="field-error" th:if="${#fields.hasErrors('authors')}" th:errors="*{authors}">Authors are required.</div></div>
+    <div class="form-field"><label for="year">Year <span>*</span></label><input class="input" id="year" type="number" min="1900" th:field="*{year}" required><div class="field-error" th:if="${#fields.hasErrors('year')}" th:errors="*{year}">Year is required.</div><div class="field-error" th:if="${#fields.hasErrors('yearInRange')}" th:errors="*{yearInRange}">Year must not be later than next year.</div></div>
+    <div class="form-field"><label for="citations">Citations</label><input class="input" id="citations" type="number" min="0" th:field="*{citations}"><div class="field-error" th:if="${#fields.hasErrors('citations')}" th:errors="*{citations}">Citations cannot be negative.</div></div>
+    <div class="form-field"><label for="doi">DOI</label><input class="input" id="doi" type="text" th:field="*{doi}" placeholder="10.xxxx/xxxxx"></div>
+    <div class="form-field"><label for="journal">Journal</label><input class="input" id="journal" type="text" th:field="*{journal}"></div>
+    <div class="form-field form-field-full"><label for="department">Department</label><select class="select" id="department" th:field="*{department}"><option value="">Unassigned</option><option th:each="option : ${departments}" th:if="${option.name != '__unassigned__'}" th:value="${option.name}" th:text="${option.name}">Department</option></select></div>
+    <div class="form-actions"><button class="button" type="submit">Save publication</button><a class="clear-link" href="/publications">Cancel</a></div>
+  </form>
+</section></main><div th:replace="~{fragments :: siteFooter}"></div></body></html>

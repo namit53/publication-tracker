@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class HomeControllerTest {
 
     @Test
-    void homePageReturnsTitle() {
-        assertEquals("Publication Tracker v2", new HomeController().home());
+    void homePageRedirectsToDashboard() {
+        assertEquals("redirect:/publications", new HomeController().home());
     }
 }
