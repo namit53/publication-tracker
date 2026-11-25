@@ -162,9 +162,46 @@ public class PublicationController {
             response.setStatus(HttpStatus.NOT_FOUND.value());
             return "publication-404";
         }
+        if (Boolean.TRUE.equals(model.getAttribute("isAdmin"))) {
+            model.addAttribute("departmentChoices", departmentRepository.findAll(
+                    org.springframework.data.domain.Sort.by("name")));
+        }
         model.addAttribute("publication", publication);
         model.addAttribute("backUrl", back == null || back.isBlank() ? (Boolean.TRUE.equals(model.getAttribute("isAdmin")) ? "/admin" : "/publications") : back);
         return "publication-detail";
+    }
+
+    @PostMapping("/admin/departments")
+    public String createDepartment(@RequestParam String name, RedirectAttributes redirect) {
+        String trimmed = name.strip();
+        if (trimmed.isEmpty() || trimmed.length() > 255 || trimmed.equalsIgnoreCase("Unassigned")
+                || trimmed.equalsIgnoreCase(PublicationService.UNASSIGNED)) {
+            redirect.addFlashAttribute("departmentError", "Enter a department name of up to 255 characters. Unassigned is reserved.");
+        } else if (departmentRepository.existsByNameIgnoreCase(trimmed)) {
+            redirect.addFlashAttribute("departmentError", "This department already exists.");
+        } else {
+            try {
+                departmentRepository.saveAndFlush(new Department(trimmed));
+                redirect.addFlashAttribute("successMessage", "Department added: " + trimmed);
+            } catch (org.springframework.dao.DataIntegrityViolationException exception) {
+                redirect.addFlashAttribute("departmentError", "The department could not be added. Check whether it already exists.");
+            }
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/admin/{id}/department")
+    public String assignDepartment(@PathVariable long id, @RequestParam String department,
+                                   RedirectAttributes redirect, HttpServletResponse response) {
+        if (!department.isEmpty() && departmentRepository.findByName(department).isEmpty()) {
+            redirect.addFlashAttribute("departmentError", "Select an existing department.");
+        } else if (!service.assignDepartment(id, department.isEmpty() ? null : department)) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return "publication-404";
+        } else {
+            redirect.addFlashAttribute("successMessage", "Department updated.");
+        }
+        return "redirect:/admin/" + id;
     }
 
     private String resultsUrl(String dashboard, String q, String department, Integer yearFrom, Integer yearTo,

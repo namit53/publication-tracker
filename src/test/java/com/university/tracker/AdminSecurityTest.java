@@ -52,6 +52,33 @@ class AdminSecurityTest {
     }
 
     @Test
+    void adminCreatesDepartmentAndAssignsPreviouslyUnassignedPaper() throws Exception {
+        var paper = publications.save(new Publication("Imported paper", "", null, 0, null, null, 4));
+        String detail = "/admin/" + paper.getId();
+        String assign = detail + "/department";
+        String name = "Atmospheric Science";
+        mvc.perform(post("/admin/departments").with(csrf()).param("name", name))
+                .andExpect(redirectedUrl("/admin/login"));
+        mvc.perform(post(assign).with(csrf()).param("department", name))
+                .andExpect(redirectedUrl("/admin/login"));
+        var result = mvc.perform(formLogin("/admin/login").user("test-editor").password("test-only-password"))
+                .andExpect(authenticated()).andReturn();
+        var session = (MockHttpSession) result.getRequest().getSession(false);
+        mvc.perform(post("/admin/departments").session(session).with(csrf()).param("name", name))
+                .andExpect(redirectedUrl("/admin"));
+        mvc.perform(get(detail).session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString(name)));
+        mvc.perform(post(assign).session(session).with(csrf()).param("department", name))
+                .andExpect(redirectedUrl(detail));
+        var saved = publications.findById(paper.getId()).orElseThrow();
+        assertEquals(name, saved.getDepartment());
+        assertEquals(0, saved.getYear());
+        mvc.perform(post(assign).session(session).with(csrf()).param("department", ""))
+                .andExpect(redirectedUrl(detail));
+        org.junit.jupiter.api.Assertions.assertNull(publications.findById(paper.getId()).orElseThrow().getDepartment());
+    }
+
+    @Test
     void authenticatedAdminCanChangeDepartment() throws Exception {
         var result = mvc.perform(formLogin("/admin/login").user("test-editor").password("test-only-password"))
                 .andExpect(redirectedUrl("/admin")).andExpect(authenticated().withRoles("ADMIN")).andReturn();

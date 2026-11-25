@@ -218,6 +218,10 @@ public class PublicationService {
         return new ExistingPublication(null, false);
     }
 
+    public boolean assignDepartment(long id, String department) {
+        return repo.assignDepartment(id, department) == 1;
+    }
+
     public List<DepartmentOption> departmentOptions() {
         if (departmentRepository == null) {
             return List.of();

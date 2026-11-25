@@ -17,4 +17,9 @@ public interface PublicationRepository extends JpaRepository<Publication, Long>,
     long countByDepartment(String department);
 
     long countByDepartmentIsNull();
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("update Publication p set p.department = :department where p.id = :id")
+    int assignDepartment(long id, String department);
 }

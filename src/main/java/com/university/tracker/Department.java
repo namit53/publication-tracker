@@ -11,6 +11,7 @@ public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @jakarta.persistence.Column(nullable = false, unique = true)
     private String name;
 
     protected Department() {

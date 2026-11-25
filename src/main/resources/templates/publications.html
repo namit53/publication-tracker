@@ -14,6 +14,15 @@
   </section>
   <div class="notice success" th:if="${successMessage}" th:text="${successMessage}"></div>
   <div class="notice" id="importNotice" role="status" aria-live="polite"></div>
+  <p class="notice error" role="alert" th:if="${departmentError}" th:text="${departmentError}"></p>
+  <details th:if="${isAdmin}" class="search-panel">
+    <summary>Add department</summary>
+    <form class="search-bar" method="post" th:action="@{/admin/departments}">
+      <label for="newDepartment">Department name</label>
+      <input class="input" id="newDepartment" name="name" required maxlength="255">
+      <button class="button" type="submit">Add department</button>
+    </form>
+  </details>
 
   <section class="search-panel" aria-label="Search publications">
     <form class="search-bar" method="get" th:action="@{${dashboard}}">
