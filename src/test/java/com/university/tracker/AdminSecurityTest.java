@@ -1,0 +1,72 @@
+package com.university.tracker;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest(properties = {"ADMIN_USERNAME=test-editor", "ADMIN_PASSWORD=test-only-password",
+        "spring.datasource.url=jdbc:h2:mem:security-tests"})
+class AdminSecurityTest {
+    @Autowired WebApplicationContext context;
+    @Autowired PublicationRepository publications;
+    MockMvc mvc;
+
+    @BeforeEach
+    void setup() {
+        mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    }
+
+    @Test
+    void anonymousBrowsingAndRestrictedActions() throws Exception {
+        long id = publications.findAll().getFirst().getId();
+        mvc.perform(get("/publications")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Admin login")))
+                .andExpect(content().string(not(containsString("href=\"/publications/new\""))));
+        mvc.perform(get("/publications/" + id)).andExpect(status().isOk());
+        mvc.perform(get("/publications/new")).andExpect(redirectedUrl("/login"));
+        mvc.perform(post("/publications/import")).andExpect(status().isForbidden());
+        mvc.perform(post("/publications/import").with(csrf())).andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void wrongPasswordFails() throws Exception {
+        mvc.perform(formLogin().user("test-editor").password("incorrect"))
+                .andExpect(unauthenticated()).andExpect(redirectedUrl("/login?error"));
+        mvc.perform(get("/login?error")).andExpect(content().string(containsString("Incorrect username or password")));
+    }
+
+    @Test
+    void authenticatedAdminCanChangeDepartment() throws Exception {
+        var result = mvc.perform(formLogin().user("test-editor").password("test-only-password"))
+                .andExpect(authenticated().withRoles("ADMIN")).andReturn();
+        var session = (MockHttpSession) result.getRequest().getSession(false);
+        var paper = publications.save(new Publication("Editable", "Researcher", "Physics",
+                2024, null, null, 0));
+        String edit = "/publications/" + paper.getId() + "/edit";
+        mvc.perform(get("/publications/new").session(session)).andExpect(status().isOk());
+        mvc.perform(get(edit).session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Chemistry")));
+        mvc.perform(post(edit).session(session)).andExpect(status().isForbidden());
+        mvc.perform(post(edit).session(session).with(csrf()).param("title", "Edited")
+                        .param("authors", "Researcher").param("year", "2024").param("department", "Chemistry"))
+                .andExpect(redirectedUrl("/publications"));
+        var saved = publications.findById(paper.getId()).orElseThrow();
+        assertEquals("Edited", saved.getTitle());
+        assertEquals("Chemistry", saved.getDepartment());
+    }
+}

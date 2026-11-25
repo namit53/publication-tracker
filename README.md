@@ -44,14 +44,17 @@ With the application running, trigger an import of UPES publications with:
 curl -X POST http://localhost:8080/publications/import
 ```
 
-The importer uses institution `I5847235`, retrieves up to 100 works per page,
-and follows additional pages automatically. It saves the title, authors,
+The importer uses institution `I5847235` and retrieves up to 100 works per page.
+The interactive import defaults to one page so it completes quickly with the
+anonymous API budget; increase `OPENALEX_MAX_PAGES` when needed. It saves the title, authors,
 publication year, DOI, journal, and citation count. Records already present by
 DOI (or by title and year when no DOI is available) are skipped. Works without
 a title are skipped because the existing publication structure requires a
 meaningful title.
 
-The endpoint returns JSON containing `imported` and `skipped` counts. If
-OpenAlex is unavailable or returns an error, it responds with HTTP 500 and an
-error message. The institution, base URL, and page size can be overridden with
-`OPENALEX_INSTITUTION_ID`, `OPENALEX_BASE_URL`, and `OPENALEX_PER_PAGE`.
+The endpoint always returns JSON containing `imported` and `skipped` counts on
+success. OpenAlex failures return HTTP 502 with an error message. Basic API
+queries work without a key, but `OPENALEX_API_KEY` is recommended for repeated
+or multi-page imports; never commit the key. The institution, base URL, page
+size, and page limit can be overridden with `OPENALEX_INSTITUTION_ID`,
+`OPENALEX_BASE_URL`, `OPENALEX_PER_PAGE`, and `OPENALEX_MAX_PAGES`.

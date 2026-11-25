@@ -12,12 +12,17 @@ public class Publication {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(length = 1000)
     private String title;
+    @Column(length = 4000)
     private String authors;
+    @Column(length = 500)
     private String department;
     @Column(name = "pub_year")
     private int year;
+    @Column(length = 500)
     private String doi;
+    @Column(length = 500)
     private String journal;
     private int citations;
 

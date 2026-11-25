@@ -1,35 +1,56 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Publications</title>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Dashboard | University Publication Tracker</title>
+  <link rel="stylesheet" th:href="@{/css/site.css}">
 </head>
 <body>
-  <h1>Publication Tracker</h1>
+<div th:replace="~{fragments :: siteHeader}"></div>
+<main class="page-shell">
+  <section class="page-heading">
+    <div><h1>Research publications</h1><p class="lede">Search and explore UPES's research record.</p></div>
+    <div class="heading-actions" th:if="${isAdmin}"><a class="button button-secondary" href="/publications/new">Add publication</a><button class="button" id="importButton" th:data-csrf="${_csrf.token}" th:data-header="${_csrf.headerName}" type="button" onclick="importPublications()">Import from OpenAlex</button></div>
+  </section>
+  <div class="notice success" th:if="${successMessage}" th:text="${successMessage}"></div>
+  <div class="notice" id="importNotice" role="status" aria-live="polite"></div>
 
-  <form method="get" action="/publications">
-    <input type="text" name="q" placeholder="Title or author" th:value="${q}">
-    <input type="text" name="department" placeholder="Department" th:value="${department}">
-    <input type="number" name="year" placeholder="Year" th:value="${year}">
-    <button type="submit">Search</button>
-    <a href="/publications">Clear</a>
-  </form>
-  <br>
+  <section class="search-panel" aria-label="Search publications">
+    <form class="search-bar" method="get" action="/publications">
+      <input class="input" type="search" name="q" placeholder="Search by title or author" th:value="${q}" aria-label="Search by title or author" autofocus>
+      <input type="hidden" name="department" th:value="${department}"><input type="hidden" name="yearFrom" th:value="${yearFrom}"><input type="hidden" name="yearTo" th:value="${yearTo}"><input type="hidden" name="sort" th:value="${sort}">
+      <button class="button" type="submit">Search</button>
+    </form>
+  </section>
 
-  <table border="1" cellpadding="6">
-    <tr>
-      <th>Title</th><th>Authors</th><th>Department</th><th>Year</th><th>Citations</th>
-    </tr>
-    <tr th:each="p : ${publications}">
-      <td th:text="${p.title}"></td>
-      <td th:text="${p.authors}"></td>
-      <td th:text="${p.department}"></td>
-      <td th:text="${p.year}"></td>
-      <td th:text="${p.citations}"></td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(publications)}">
-      <td colspan="5">No papers found.</td>
-    </tr>
-  </table>
-</body>
-</html>
+  <section class="stats" aria-label="Publication statistics">
+    <article class="stat-card"><div class="stat-label">Publications</div><div class="stat-value" th:text="${statistics.publications}">0</div></article>
+    <article class="stat-card"><div class="stat-label">Researchers</div><div class="stat-value" th:text="${statistics.researchers}">0</div></article>
+    <article class="stat-card"><div class="stat-label">Citations</div><div class="stat-value" th:text="${statistics.citations}">0</div></article>
+    <article class="stat-card"><div class="stat-label">Journals</div><div class="stat-value" th:text="${statistics.journals}">0</div></article>
+  </section>
+
+  <div class="results-layout">
+    <aside class="sidebar" aria-label="Publication filters">
+      <h2>Filter results</h2>
+      <form method="get" action="/publications">
+        <input type="hidden" name="q" th:value="${q}">
+        <div class="filter-group"><label for="department">Department</label><select class="select" id="department" name="department"><option value="" th:selected="${department == null or department == ''}">All departments</option><option th:each="option : ${departments}" th:value="${option.name}" th:selected="${option.name == department}" th:text="${option.name == '__unassigned__' ? 'Unassigned (' + option.count + ')' : option.name + ' (' + option.count + ')'}">Department (0)</option></select></div>
+        <div class="filter-group"><label for="yearFrom">Year from</label><input class="input" id="yearFrom" type="number" name="yearFrom" th:value="${yearFrom}"></div>
+        <div class="filter-group"><label for="yearTo">Year to</label><input class="input" id="yearTo" type="number" name="yearTo" th:value="${yearTo}"></div>
+        <div class="filter-group"><label for="sort">Sort by</label><select class="select" id="sort" name="sort"><option value="newest" th:selected="${sort == 'newest'}">Newest first</option><option value="oldest" th:selected="${sort == 'oldest'}">Oldest first</option><option value="cited" th:selected="${sort == 'cited'}">Most cited</option></select></div>
+        <div class="filter-actions"><button class="button" type="submit">Apply filters</button><a class="clear-link" href="/publications">Clear filters</a></div>
+      </form>
+    </aside>
+
+    <section class="results-panel" aria-labelledby="results-heading">
+      <div class="results-heading"><h2 id="results-heading">All publications</h2><span class="results-count" th:text="${totalResults + ' result(s)'}">0 result(s)</span></div>
+      <div class="publication-list" th:if="${!#lists.isEmpty(publications)}"><article class="publication-card" th:each="p : ${publications}"><div><a class="publication-title" th:href="@{/publications/{id}(id=${p.id},back=${backUrl})}" th:text="${p.title}">Publication title</a><div class="authors" th:text="${p.authors != null and !p.authors.isBlank() ? p.authors : 'Authors unavailable'}">Authors</div><div class="metadata"><span th:text="${p.journal != null and !p.journal.isBlank() ? p.journal : 'Journal unavailable'}">Journal</span> · <span th:text="${p.year > 0 ? p.year : 'Year unavailable'}">2025</span></div></div><div class="citations" th:text="${p.citations + ' citations'}">0 citations</div></article></div>
+      <div class="empty-state" th:if="${#lists.isEmpty(publications)}"><strong>No publications found</strong>Try changing your search or filters, or import the latest records from OpenAlex.</div>
+      <div class="pagination" th:if="${totalPages > 0}"><div class="showing" th:text="${'Showing ' + resultStart + '-' + resultEnd + ' of ' + totalResults + ' results'}">Showing 1-20 of N results</div><div class="pagination-links"><a th:if="${hasPrevious}" th:href="@{/publications(q=${q},department=${department},yearFrom=${yearFrom},yearTo=${yearTo},sort=${sort},page=${currentPage - 1})}">Previous</a><span class="disabled" th:unless="${hasPrevious}">Previous</span><a th:each="pageNumber : ${pageNumbers}" th:classappend="${pageNumber == currentPage ? ' current' : ''}" th:href="@{/publications(q=${q},department=${department},yearFrom=${yearFrom},yearTo=${yearTo},sort=${sort},page=${pageNumber})}" th:text="${pageNumber}">1</a><a th:if="${hasNext}" th:href="@{/publications(q=${q},department=${department},yearFrom=${yearFrom},yearTo=${yearTo},sort=${sort},page=${currentPage + 1})}">Next</a><span class="disabled" th:unless="${hasNext}">Next</span></div></div>
+    </section>
+  </div>
+</main>
+<div th:replace="~{fragments :: siteFooter}"></div>
+<script>async function importPublications(){const b=document.getElementById('importButton'),n=document.getElementById('importNotice');b.disabled=true;b.textContent='Importing...';n.className='notice';n.textContent='Fetching the latest UPES publications from OpenAlex...';try{const r=await fetch('/publications/import',{method:'POST',headers:{'Accept':'application/json',[b.dataset.header]:b.dataset.csrf}}),body=await r.text();let x={};try{x=body?JSON.parse(body):{}}catch(_){ }if(!r.ok)throw new Error(x.error||body||'The import could not be completed.');n.className='notice success';n.textContent=`Import complete: ${x.imported} added, ${x.updated} updated, ${x.skipped} skipped.`;setTimeout(()=>window.location.reload(),900)}catch(e){n.className='notice error';n.textContent=e.message||'The import could not be completed.';b.disabled=false;b.textContent='Import from OpenAlex'}}</script>
+</body></html>
