@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Publications</title>
+</head>
+<body>
+  <h1>Publication Tracker</h1>
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>Title</th><th>Authors</th><th>Department</th><th>Year</th><th>Citations</th>
+    </tr>
+    <tr th:each="p : ${publications}">
+      <td th:text="${p.title}"></td>
+      <td th:text="${p.authors}"></td>
+      <td th:text="${p.department}"></td>
+      <td th:text="${p.year}"></td>
+      <td th:text="${p.citations}"></td>
+    </tr>
+  </table>
+</body>
+</html>
