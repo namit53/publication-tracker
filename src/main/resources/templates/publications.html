@@ -6,6 +6,16 @@
 </head>
 <body>
   <h1>Publication Tracker</h1>
+
+  <form method="get" action="/publications">
+    <input type="text" name="q" placeholder="Title or author" th:value="${q}">
+    <input type="text" name="department" placeholder="Department" th:value="${department}">
+    <input type="number" name="year" placeholder="Year" th:value="${year}">
+    <button type="submit">Search</button>
+    <a href="/publications">Clear</a>
+  </form>
+  <br>
+
   <table border="1" cellpadding="6">
     <tr>
       <th>Title</th><th>Authors</th><th>Department</th><th>Year</th><th>Citations</th>
@@ -16,6 +26,9 @@
       <td th:text="${p.department}"></td>
       <td th:text="${p.year}"></td>
       <td th:text="${p.citations}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(publications)}">
+      <td colspan="5">No papers found.</td>
     </tr>
   </table>
 </body>
