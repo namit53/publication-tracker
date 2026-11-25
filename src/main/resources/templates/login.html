@@ -10,7 +10,7 @@
 <main class="page-shell"><section class="form-card">
   <h1>Admin login</h1>
   <p class="notice error" role="alert" th:if="${param.error != null}">Incorrect username or password.</p>
-  <form class="form-grid" method="post" th:action="@{/login}">
+  <form class="form-grid" method="post" th:action="@{/admin/login}">
     <label class="form-field form-field-full">Username
       <input class="input" name="username" autocomplete="username" required>
     </label>

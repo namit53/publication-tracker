@@ -34,10 +34,10 @@ public class AdminSecurity {
     SecurityFilterChain security(HttpSecurity http) {
         return http.authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/publications", "/publications/{id:[0-9]+}",
+                        .requestMatchers(HttpMethod.GET, "/", "/publications", "/publications/{id:[0-9]+}",
                                 "/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                         .anyRequest().hasRole("ADMIN"))
-                .formLogin(login -> login.loginPage("/login").defaultSuccessUrl("/publications").permitAll())
+                .formLogin(login -> login.loginPage("/admin/login").defaultSuccessUrl("/admin", true).permitAll())
                 .logout(logout -> logout.logoutSuccessUrl("/publications"))
                 .build();
     }

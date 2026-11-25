@@ -4,8 +4,7 @@
 <header class="site-header" th:fragment="siteHeader">
   <nav class="site-nav" aria-label="Main navigation">
     <a class="site-brand" href="/publications"><span class="site-mark">U</span><span>UPES Research <small>Publication tracker</small></span></a>
-    <a class="site-nav-link" href="/publications">Dashboard</a>
-    <a class="site-nav-link" th:unless="${isAdmin}" th:href="@{/login}">Admin login</a>
+    <a class="site-nav-link" th:href="${isAdmin} ? @{/admin} : @{/publications}">Dashboard</a>
     <form th:if="${isAdmin}" method="post" th:action="@{/logout}">
       <button class="button button-secondary" type="submit">Logout</button>
     </form>

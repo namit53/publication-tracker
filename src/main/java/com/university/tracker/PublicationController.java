@@ -34,15 +34,15 @@ public class PublicationController {
 
     @ModelAttribute("isAdmin")
     public boolean isAdmin(jakarta.servlet.http.HttpServletRequest request) {
-        return request.isUserInRole("ADMIN");
+        return request.isUserInRole("ADMIN") && request.getRequestURI().startsWith(request.getContextPath() + "/admin");
     }
 
-    @GetMapping("/login")
+    @GetMapping("/admin/login")
     public String login() {
         return "login";
     }
 
-    @GetMapping("/publications/{id}/edit")
+    @GetMapping({"/publications/{id}/edit", "/admin/{id}/edit"})
     public String edit(@PathVariable long id, Model model, HttpServletResponse response) {
         Publication paper = service.findById(id);
         if (paper == null) {
@@ -63,7 +63,7 @@ public class PublicationController {
         return "publication-form";
     }
 
-    @PostMapping("/publications/{id}/edit")
+    @PostMapping({"/publications/{id}/edit", "/admin/{id}/edit"})
     public String saveEdit(@PathVariable long id,
                            @Valid @ModelAttribute("publicationForm") PublicationForm form,
                            BindingResult errors, Model model, HttpServletResponse response,
@@ -81,7 +81,7 @@ public class PublicationController {
             try {
                 service.updatePublication(paper, form);
                 redirect.addFlashAttribute("successMessage", "Publication updated successfully.");
-                return "redirect:/publications";
+                return "redirect:/admin";
             } catch (DuplicatePublicationException exception) {
                 errors.reject("duplicate", exception.getMessage());
             }
@@ -91,7 +91,7 @@ public class PublicationController {
         return "publication-form";
     }
 
-    @GetMapping("/publications")
+    @GetMapping({"/publications", "/admin"})
     public String list(@RequestParam(required = false) String q,
                        @RequestParam(required = false) String department,
                        @RequestParam(required = false) Integer year,
@@ -100,6 +100,8 @@ public class PublicationController {
                        @RequestParam(defaultValue = "newest") String sort,
                        @RequestParam(defaultValue = "1") int page,
                        Model model) {
+        String dashboard = Boolean.TRUE.equals(model.getAttribute("isAdmin")) ? "/admin" : "/publications";
+        model.addAttribute("dashboard", dashboard);
         if (year != null && yearFrom == null && yearTo == null) {
             yearFrom = year;
             yearTo = year;
@@ -122,19 +124,19 @@ public class PublicationController {
         model.addAttribute("departments", service.departmentOptions());
         model.addAttribute("hasPrevious", resultPage.hasPrevious());
         model.addAttribute("hasNext", resultPage.hasNext());
-        model.addAttribute("backUrl", resultsUrl(q, department, yearFrom, yearTo, sort, currentPage));
+        model.addAttribute("backUrl", resultsUrl(dashboard, q, department, yearFrom, yearTo, sort, currentPage));
         model.addAttribute("statistics", service.statistics());
         return "publications";
     }
 
-    @GetMapping("/publications/new")
+    @GetMapping({"/publications/new", "/admin/new"})
     public String newPublication(Model model) {
         model.addAttribute("publicationForm", new PublicationForm());
         model.addAttribute("departments", service.departmentOptions());
         return "publication-form";
     }
 
-    @PostMapping("/publications/new")
+    @PostMapping({"/publications/new", "/admin/new"})
     public String createPublication(@Valid @ModelAttribute("publicationForm") PublicationForm form,
                                     BindingResult bindingResult, Model model,
                                     RedirectAttributes redirectAttributes) {
@@ -142,7 +144,7 @@ public class PublicationController {
             try {
                 service.addManualPublication(form);
                 redirectAttributes.addFlashAttribute("successMessage", "Publication added successfully.");
-                return "redirect:/publications";
+                return "redirect:/admin";
             } catch (DuplicatePublicationException exception) {
                 bindingResult.reject("duplicate", exception.getMessage());
             }
@@ -151,7 +153,7 @@ public class PublicationController {
         return "publication-form";
     }
 
-    @GetMapping("/publications/{id}")
+    @GetMapping({"/publications/{id}", "/admin/{id}"})
     public String detail(@PathVariable long id,
                          @RequestParam(required = false) String back,
                          Model model, HttpServletResponse response) {
@@ -161,13 +163,13 @@ public class PublicationController {
             return "publication-404";
         }
         model.addAttribute("publication", publication);
-        model.addAttribute("backUrl", back == null || back.isBlank() ? "/publications" : back);
+        model.addAttribute("backUrl", back == null || back.isBlank() ? (Boolean.TRUE.equals(model.getAttribute("isAdmin")) ? "/admin" : "/publications") : back);
         return "publication-detail";
     }
 
-    private String resultsUrl(String q, String department, Integer yearFrom, Integer yearTo,
+    private String resultsUrl(String dashboard, String q, String department, Integer yearFrom, Integer yearTo,
                               String sort, int page) {
-        StringBuilder url = new StringBuilder("/publications?");
+        StringBuilder url = new StringBuilder(dashboard).append('?');
         append(url, "q", q);
         append(url, "department", department);
         append(url, "yearFrom", yearFrom);
@@ -183,7 +185,7 @@ public class PublicationController {
         }
     }
 
-    @PostMapping("/publications/import")
+    @PostMapping({"/publications/import", "/admin/import"})
     @ResponseBody
     public ResponseEntity<?> importFromOpenAlex() {
         try {

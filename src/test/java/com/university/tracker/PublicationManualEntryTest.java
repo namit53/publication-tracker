@@ -67,7 +67,7 @@ class PublicationManualEntryTest {
                         .param("department", "Physics")
                         .param("citations", "3"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/publications"));
+                .andExpect(redirectedUrl("/admin"));
 
         Publication saved = repository.findByDoi("10.4000/manual-valid").orElseThrow();
         assertEquals("Valid manual publication", saved.getTitle());
