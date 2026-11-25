@@ -8,6 +8,6 @@ class HomeControllerTest {
 
     @Test
     void homePageReturnsTitle() {
-        assertEquals("Publication Tracker", new HomeController().home());
+        assertEquals("Publication Tracker v2", new HomeController().home());
     }
 }
