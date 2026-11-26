@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About Publication Tracker</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; color: #222; }
+    h1 { margin-bottom: 4px; }
+    h2 { margin-top: 32px; }
+    a { color: #222; }
+  </style>
+</head>
+<body>
+  <h1>About Publication Tracker</h1>
+  <p>A university research publication tracker, built as a CI/CD project. Anyone can search and browse research papers, and an admin can add papers or import them from OpenAlex.</p>
+
+  <h2>How the pipeline works</h2>
+  <p>Every push to GitHub starts an automated pipeline:</p>
+  <ol>
+    <li>GitHub Actions runs all automated tests.</li>
+    <li>If the tests pass, it builds a Docker image of the app.</li>
+    <li>If both pass, Render deploys the new version.</li>
+    <li>If anything fails, nothing is deployed and the live site stays unchanged.</li>
+  </ol>
+
+  <h2>Built with</h2>
+  <p>Java 25, Spring Boot, Maven, Thymeleaf, Docker, GitHub Actions, Render and the OpenAlex API.</p>
+
+  <h2>Team</h2>
+  <p>Replace this line with the three team members' names.</p>
+
+  <p><a href="/publications">Back to publications</a></p>
+</body>
+</html>
